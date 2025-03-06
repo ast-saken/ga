@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GREEN-API Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .input-group, .output-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        textarea {
+            height: 150px;
+            resize: none;
+        }
+        button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>GREEN-API Test</h1>
+
+    <div class="input-group">
+        <label for="idInstance">idInstance:</label>
+        <input type="text" id="idInstance" placeholder="Введи idInstance">
+        
+        <label for="apiToken">ApiTokenInstance:</label>
+        <input type="text" id="apiToken" placeholder="Введи ApiTokenInstance">
+    </div>
+
+    <div class="input-group">
+        <label for="chatId">Chat ID (для sendMessage):</label>
+        <input type="text" id="chatId" placeholder="Пример: 79991234567@c.us">
+        
+        <label for="message">Сообщение:</label>
+        <input type="text" id="message" placeholder="Введи текст сообщения">
+        
+        <label for="fileUrl">URL файла (для sendFileByUrl):</label>
+        <input type="text" id="fileUrl" placeholder="Пример: https://example.com/file.png">
+    </div>
+
+    <div class="button-group">
+        <button onclick="callApi('getSettings')">Get Settings</button>
+        <button onclick="callApi('getStateInstance')">Get State Instance</button>
+        <button onclick="callApi('sendMessage')">Send Message</button>
+        <button onclick="callApi('sendFileByUrl')">Send File By URL</button>
+    </div>
+
+    <div class="output-group">
+        <label for="output">Результат:</label>
+        <textarea id="output" readonly></textarea>
+    </div>
+
+    <script>
+        async function callApi(method) {
+            const idInstance = document.getElementById('idInstance').value;
+            const apiToken = document.getElementById('apiToken').value;
+            const chatId = document.getElementById('chatId').value;
+            const message = document.getElementById('message').value;
+            const fileUrl = document.getElementById('fileUrl').value;
+            const output = document.getElementById('output');
+
+            if (!idInstance || !apiToken) {
+                output.value = 'Ошибка: Введи idInstance и ApiTokenInstance!';
+                return;
+            }
+
+            const baseUrl = `https://api.green-api.com/waInstance${idInstance}`;
+            let url, body;
+
+            switch (method) {
+                case 'getSettings':
+                    url = `${baseUrl}/getSettings/${apiToken}`;
+                    break;
+                case 'getStateInstance':
+                    url = `${baseUrl}/getStateInstance/${apiToken}`;
+                    break;
+                case 'sendMessage':
+                    if (!chatId || !message) {
+                        output.value = 'Ошибка: Введи Chat ID и сообщение!';
+                        return;
+                    }
+                    url = `${baseUrl}/sendMessage/${apiToken}`;
+                    body = JSON.stringify({ chatId, message });
+                    break;
+                case 'sendFileByUrl':
+                    if (!chatId || !fileUrl) {
+                        output.value = 'Ошибка: Введи Chat ID и URL файла!';
+                        return;
+                    }
+                    url = `${baseUrl}/sendFileByUrl/${apiToken}`;
+                    body = JSON.stringify({ chatId, urlFile: fileUrl });
+                    break;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: body ? 'POST' : 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: body || null
+                });
+                const data = await response.json();
+                output.value = JSON.stringify(data, null, 2);
+            } catch (error) {
+                output.value = `Ошибка: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
